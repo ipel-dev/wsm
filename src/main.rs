@@ -1,6 +1,4 @@
-mod id;
-mod pool;
-mod __init__;
-
+use wsm::setup;
 fn main() {
+    setup();
 }
