@@ -162,12 +162,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9c8d87e72b64a3b4db28d11ce29237c246188f4f51057d65a7eab63b7987e423"
 
 [[package]]
+name = "wsa"
+version = "1.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1042a61d4a0480b4597eff3985be1be190539d197bfbbd769b310d21aca0258"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "wsm"
-version = "0.1.0"
+version = "1.0.2"
 dependencies = [
  "lazy_static",
  "rand",
  "serde_json",
+ "wsa",
 ]
 
 [[package]]
