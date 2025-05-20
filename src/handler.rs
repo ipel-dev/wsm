@@ -1,5 +1,8 @@
+// src/handler.rs
+
 use std::sync::{Mutex, Arc};
 use lazy_static::lazy_static;
+use serde_json::Value;
 
 type DisconnectHandler = Arc<dyn Fn(&str) + Send + Sync>;
 type AuthHandler = Arc<dyn Fn(&str, &str) -> (bool, String) + Send + Sync>;
@@ -80,5 +83,32 @@ where
 pub fn notify_client_dropped(client_id: &str) {
     if let Some(handler) = &*CLIENT_DROP_HANDLER.lock().unwrap() {
         handler(client_id);
+    }
+}
+
+type ClientRequestHandler = Arc<dyn Fn(&str, &str, &str, &str, &str, Value) + Send + Sync>;
+
+lazy_static! {
+    static ref CLIENT_REQUEST_HANDLER: Mutex<Option<ClientRequestHandler>> = Mutex::new(None);
+}
+
+pub fn register_client_request_handler<F>(f: F)
+where
+    F: Fn(&str, &str, &str, &str, &str, Value) + Send + Sync + 'static,
+{
+    let mut handler = CLIENT_REQUEST_HANDLER.lock().unwrap();
+    *handler = Some(Arc::new(f));
+}
+
+pub fn trigger_client_request(
+    client_id: &str,
+    msg_id: &str,
+    method: &str,
+    version: &str,
+    endpoint: &str,
+    params: Value,
+) {
+    if let Some(handler) = &*CLIENT_REQUEST_HANDLER.lock().unwrap() {
+        handler(client_id, msg_id, method, version, endpoint, params);
     }
 }

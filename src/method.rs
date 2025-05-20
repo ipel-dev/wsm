@@ -46,3 +46,32 @@ pub fn build_method(method: &str, version: &str, endpoint: &str) -> String {
 
     format!("{}@v{}/{}", method, version, endpoint)
 }
+
+// Parse a full method string of the form "xxx@v1/endpoint"
+// Returns: (method, version, endpoint)
+pub fn parse_method_string(full: &str) -> Option<(String, String, String)> {
+    let parts: Vec<&str> = full.split('@').collect();
+    if parts.len() != 2 {
+        return None;
+    }
+
+    let method = parts[0];
+    let version_and_endpoint: Vec<&str> = parts[1].split('/').collect();
+    if version_and_endpoint.len() != 2 {
+        return None;
+    }
+
+    let version_part = version_and_endpoint[0];
+    if !version_part.starts_with('v') {
+        return None;
+    }
+
+    let version = version_part.trim_start_matches('v');
+    let endpoint = version_and_endpoint[1];
+
+    Some((
+        method.to_string(),
+        version.to_string(),
+        endpoint.to_string(),
+    ))
+}
