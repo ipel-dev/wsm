@@ -2,9 +2,22 @@
 name = "wsm"
 version = "1.0.2"
 edition = "2024"
+authors = ["Canmi(Canmi21)<t@canmi.icu>"]
+description = "WebSocket-based API protocol."
+license = "MIT"
+repository = "https://github.com/ipel-dev/wsm"
+homepage = "https://github.com/ipel-dev/wsm"
+documentation = "https://github.com/ipel-dev/wsm?tab=readme-ov-file"
+readme = "README.md"
+keywords = ["wsm","wsa","websocket","api"]
+categories = ["parsing","data-structures","network-programming"]
 
 [dependencies]
 rand = "0.8"
 serde_json = "1.0"
 lazy_static = "1.4"
 wsa = "1.0"
+
+[lib]
+name = "wsm"
+path = "src/lib.rs"
