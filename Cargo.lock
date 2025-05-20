@@ -966,9 +966,9 @@ dependencies = [
 
 [[package]]
 name = "wsa"
-version = "1.0.3"
+version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1042a61d4a0480b4597eff3985be1be190539d197bfbbd769b310d21aca0258"
+checksum = "7717b9778e527e91466338a1db28eb888cc7ffceb978a916958ceb165183d517"
 dependencies = [
  "serde",
  "serde_json",

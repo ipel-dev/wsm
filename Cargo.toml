@@ -16,7 +16,7 @@ categories = ["parsing","data-structures","network-programming"]
 rand = "0.8"
 serde_json = "1.0"
 lazy_static = "1.4"
-wsa = "1.0"
+wsa = "1.0.4"
 axum = { version = "0.8", features = ["ws"] }
 tokio = { version = "1", features = ["full"] }
 futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }

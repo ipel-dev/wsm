@@ -19,7 +19,7 @@ pub fn init_client_connection() -> (Value, String) {
     add_msg_id(&client_id, &msg_id);
 
     let method = build_method("wsm", "1", "handshake");
-    let params = build_params(vec![&client_id]);
+    let params = build_params(vec![&"welcome"]);
 
     let msg_string = create_request_form_server_to_client(
         &client_id,
