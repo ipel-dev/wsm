@@ -2,7 +2,7 @@
 
 use serde_json::Value;
 use crate::handler::trigger_disconnect;
-use crate::pool::is_msg_id_available;
+use crate::pool::{is_msg_id_available, get_msg_json};
 use crate::client::{is_client_valid, unregister_client};
 
 // protocol message handler
@@ -22,19 +22,6 @@ fn validate_client_response(json: &Value, client_id: &str) -> bool {
         && check_to_field(json, client_id)
 }
 
-// Check that "i" field exists and is a string
-fn check_msg_id(json: &Value, client_id: &str) -> bool {
-    json.get("i")
-        .and_then(|v| v.as_str())
-        .is_some()
-        .then_some(())
-        .is_some()
-        || {
-            trigger_disconnect(client_id);
-            false
-        }
-}
-
 // Check that "f" matches client_id
 fn check_from_field(json: &Value, client_id: &str) -> bool {
     match json.get("f").and_then(|v| v.as_str()) {
@@ -47,18 +34,56 @@ fn check_from_field(json: &Value, client_id: &str) -> bool {
     }
 }
 
+// Check that "i" field exists and is a string
+fn check_msg_id(json: &Value, client_id: &str) -> bool {
+    json.get("i")
+        .and_then(|v| v.as_str())
+        .is_some()
+        .then_some(())
+        .is_some()
+        || {
+            trigger_disconnect(client_id);
+            unregister_client(client_id);
+            false
+        }
+}
+
 // Check that msg_id exists in pool (i.e. response is to something we sent)
 fn check_msg_id_exists(json: &Value, client_id: &str) -> bool {
     let msg_id = match json.get("i").and_then(|v| v.as_str()) {
         Some(id) => id,
-        None => return false, // already handled in check_msg_id
+        None => return false,
     };
 
     if is_msg_id_available(client_id, msg_id) {
         trigger_disconnect(client_id);
-        false
-    } else {
-        true
+        unregister_client(client_id);
+        return false;
+    }
+
+    let original = get_msg_json(client_id, msg_id);
+
+    if original.is_null() {
+        trigger_disconnect(client_id);
+        unregister_client(client_id);
+        return false;
+    }
+
+    let y = original.get("y").and_then(|v| v.as_str());
+    let t = original.get("t").and_then(|v| v.as_str());
+
+    match (y, t) {
+        (Some("g"), Some(to)) if to == client_id => {
+            true
+        }
+        (Some("e"), Some("c")) => {
+            true
+        }
+        _ => {
+            trigger_disconnect(client_id);
+            unregister_client(client_id);
+            false
+        }
     }
 }
 
