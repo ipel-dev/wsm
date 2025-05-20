@@ -1,21 +1,17 @@
 use tokio_tungstenite::connect_async;
 use url::Url;
-use futures_util::{StreamExt};
+use futures_util::stream::StreamExt;
 use serde_json::Value;
 
 #[tokio::main]
 async fn main() {
     let url = Url::parse("ws://localhost:3333/socket").unwrap();
-
     println!("Connecting to {}", url);
 
     match connect_async(url).await {
         Ok((ws_stream, _)) => {
             println!("Connected successfully!");
-
-            let (write, read) = ws_stream.split();
-
-            // Ignore write half, only read messages
+            let (_write, read) = ws_stream.split();
             read.for_each(|message| async {
                 if let Ok(msg) = message {
                     if msg.is_text() {

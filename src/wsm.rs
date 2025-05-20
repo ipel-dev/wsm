@@ -6,7 +6,7 @@ use crate::id::gen_unique_id;
 use crate::method::build_method;
 use crate::params::build_params;
 use crate::pool::{add_msg_id, set_msg_json};
-use crate::client::register_client;
+use crate::client::{register_client, is_client_valid};
 use serde_json::Value;
 
 // Initialize a new client connection, create its msg pool, and build handshake JSON.
@@ -21,16 +21,18 @@ pub fn init_client_connection() -> (Value, String) {
     let method = build_method("wsm", "1", "handshake");
     let params = build_params(vec![&client_id]);
 
-    let msg_json = create_request_form_server_to_client(
-        "server",
+    let msg_string = create_request_form_server_to_client(
         &client_id,
         &msg_id,
         &method,
-        &params,
+        params,
     );
 
+    let msg_json: Value = serde_json::from_str(&msg_string).expect("Invalid JSON");
+
     set_msg_json(&client_id, &msg_id, msg_json.clone());
-    register_client(&client_id); // handshake status -> unauthorized
+    register_client(&client_id);
+
     (msg_json, client_id)
 }
 
@@ -48,10 +50,12 @@ pub fn server_request_client(
     add_msg_id(client_id, &msg_id);
 
     let full_method = build_method(method, version, endpoint);
-    let json_str = create_request_form_server_to_client(client_id, &msg_id, &full_method, params);
+    let param_value = build_params(params);
 
-    // store in pool
-    set_msg_json(client_id, &msg_id, json_str);
+    let json_str = create_request_form_server_to_client(client_id, &msg_id, &full_method, param_value);
+    let json_value: Value = serde_json::from_str(&json_str).expect("Invalid JSON format");
 
-    (json_str, msg_id)
+    set_msg_json(client_id, &msg_id, json_value.clone());
+
+    (json_value, msg_id)
 }
