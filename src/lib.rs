@@ -7,6 +7,8 @@ pub mod wsa;
 pub mod method;
 pub mod params;
 pub mod pretty;
+pub mod client;
+pub mod socket;
 
 mod __init__;
 

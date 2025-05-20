@@ -67,7 +67,7 @@ fn validate_err_code(err_code: &str) {
         c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_'
     }) {
         panic!(
-            "invalid err_code `{}`: only A–Z, 0–9, and '_' are allowed",
+            "invalid err_code `{}`: only A-Z, 0-9, and '_' are allowed",
             err_code
         );
     }
