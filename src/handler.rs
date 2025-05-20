@@ -9,7 +9,7 @@ lazy_static! {
     static ref AUTH_HANDLER: Mutex<Option<AuthHandler>> = Mutex::new(None);
 }
 
-// Register a disconnect handler which will be called with client_id.
+// Register a disconnect handler which will be called with client_id
 pub fn register_disconnect_handler<F>(f: F)
 where
     F: Fn(&str) + Send + Sync + 'static,
@@ -40,5 +40,25 @@ pub fn trigger_auth(client_id: &str, code: &str) -> (bool, String) {
         handler(client_id, code)
     } else {
         (false, String::from("unauthorized"))
+    }
+}
+
+type ResponseCallbackHandler = Arc<dyn Fn(&str, &str, bool, &str) + Send + Sync>;
+
+lazy_static! {
+    static ref RESPONSE_CALLBACK_HANDLER: Mutex<Option<ResponseCallbackHandler>> = Mutex::new(None);
+}
+
+pub fn register_response_callback_handler<F>(f: F)
+where
+    F: Fn(&str, &str, bool, &str) + Send + Sync + 'static,
+{
+    let mut handler = RESPONSE_CALLBACK_HANDLER.lock().unwrap();
+    *handler = Some(Arc::new(f));
+}
+
+pub fn trigger_response_callback(client_id: &str, msg_id: &str, success: bool, result: &str) {
+    if let Some(handler) = &*RESPONSE_CALLBACK_HANDLER.lock().unwrap() {
+        handler(client_id, msg_id, success, result);
     }
 }

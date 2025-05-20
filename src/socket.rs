@@ -5,6 +5,7 @@ use crate::handler::trigger_disconnect;
 use crate::pool::{is_msg_id_available, get_msg_json, remove_msg_id};
 use crate::client::{is_client_valid, unregister_client};
 use crate::handshake::{get_client_handshake_status, handle_handshake_auth};
+use crate::process::process_response_from_client;
 
 // protocol message handler
 pub fn handle_wsm_message(json: Value, client_id: &str) {
@@ -15,10 +16,12 @@ pub fn handle_wsm_message(json: Value, client_id: &str) {
     match json.get("t").and_then(|v| v.as_str()) {
         Some("s") => {
             match get_client_handshake_status(client_id) {
-                "active" => {
-                    // TODO: handle response from already active client
+                "group" => {
+                    // handle response from already active and login client
+                    process_response_from_client(json, client_id);
+                    
                 }
-                "wait-for-response" => {
+                "unauthorized" => {
                     handle_handshake_auth(&json, client_id);
                 }
                 _ => {
