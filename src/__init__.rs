@@ -4,5 +4,5 @@ use crate::pool::create_pool;
 
 pub fn setup() {
     create_pool("server");
-    create_pool("client");
+    //create_pool("client");
 }

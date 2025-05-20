@@ -9,6 +9,7 @@ pub mod params;
 pub mod pretty;
 pub mod client;
 pub mod socket;
+pub mod server;
 
 mod __init__;
 

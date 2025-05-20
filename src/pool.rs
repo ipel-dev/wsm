@@ -66,3 +66,15 @@ pub fn get_msg_json(pool_name: &str, msg_id: &str) -> Value {
     let entry = pool.get(msg_id).unwrap_or_else(|| panic!("msg_id not found in pool {}: {}", pool_name, msg_id));
     entry.clone().unwrap_or(Value::Null)
 }
+
+pub fn is_msg_id_available(pool_name: &str, msg_id: &str) -> bool {
+    let pools = POOLS.lock().unwrap();
+    let pool = pools.get(pool_name).unwrap_or_else(|| panic!("Pool not found: {}", pool_name));
+    !pool.contains_key(msg_id) // Returns true if msg_id doesn't exist, false if it does
+}
+
+pub fn list_msg_id(pool_name: &str) -> Vec<String> {
+    let pools = POOLS.lock().unwrap();
+    let pool = pools.get(pool_name).unwrap_or_else(|| panic!("Pool not found: {}", pool_name));
+    pool.keys().cloned().collect()
+}
