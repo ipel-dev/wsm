@@ -1,10 +1,8 @@
-// src/handler.rs
-
 use std::sync::{Mutex, Arc};
 use lazy_static::lazy_static;
 
 type DisconnectHandler = Arc<dyn Fn(&str) + Send + Sync>;
-type AuthHandler = Arc<dyn Fn(&str, &str) -> bool + Send + Sync>;
+type AuthHandler = Arc<dyn Fn(&str, &str) -> (bool, String) + Send + Sync>;
 
 lazy_static! {
     static ref DISCONNECT_HANDLER: Mutex<Option<DisconnectHandler>> = Mutex::new(None);
@@ -27,20 +25,20 @@ pub fn trigger_disconnect(client_id: &str) {
     }
 }
 
-// Register an authentication handler which receives (client_id, base64) and returns bool
+// Register an authentication handler which receives (client_id, base64) and returns (ok, group)
 pub fn register_auth_handler<F>(f: F)
 where
-    F: Fn(&str, &str) -> bool + Send + Sync + 'static,
+    F: Fn(&str, &str) -> (bool, String) + Send + Sync + 'static,
 {
     let mut handler = AUTH_HANDLER.lock().unwrap();
     *handler = Some(Arc::new(f));
 }
 
-// Trigger the registered auth handler, returns true if passed, false if failed
-pub fn trigger_auth(client_id: &str, code: &str) -> bool {
+// Trigger the registered auth handler, returns (ok, group)
+pub fn trigger_auth(client_id: &str, code: &str) -> (bool, String) {
     if let Some(handler) = &*AUTH_HANDLER.lock().unwrap() {
         handler(client_id, code)
     } else {
-        false // default to failure if no handler registered
+        (false, String::from("unauthorized"))
     }
 }

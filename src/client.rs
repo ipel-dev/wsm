@@ -21,7 +21,7 @@ pub fn register_client(client_id: &str) {
     }
 
     let mut meta = HashMap::new();
-    meta.insert("wsm:wait-for-response".to_string(), Value::Bool(true));
+    meta.insert("unauthorized".to_string(), Value::Bool(true));
     clients.insert(client_id.to_string(), meta);
 }
 

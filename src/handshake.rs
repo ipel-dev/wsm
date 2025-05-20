@@ -9,7 +9,7 @@ use crate::client::set_client_field;
 
 // Return handshake status of a client: "wait-for-response" or "active"
 pub fn get_client_handshake_status(client_id: &str) -> &'static str {
-    match get_client_field(client_id, "wsm:wait-for-response") {
+    match get_client_field(client_id, "unauthorized") {
         Some(Value::Bool(true)) => "wait-for-response",
         Some(Value::Bool(false)) => "active",
         _ => "wait-for-response",
@@ -43,9 +43,10 @@ pub fn handle_handshake_auth(json: &Value, client_id: &str) {
     // check "c"
     match c {
         Some(code) if is_base64(code) => {
-            if trigger_auth(client_id, code) {
-                // mark client as active
-                set_client_field(client_id, "wsm:wait-for-response", Value::Bool(false));
+            let (ok, group) = trigger_auth(client_id, code);
+            if ok {
+                set_client_field(client_id, "unauthorized", Value::Bool(false));
+                set_client_field(client_id, "group", Value::String(group));
             } else {
                 trigger_disconnect(client_id);
                 unregister_client(client_id);
@@ -53,9 +54,8 @@ pub fn handle_handshake_auth(json: &Value, client_id: &str) {
             }
         }
         Some("Anonymous") => {
-            // anonymous access: mark active and add "anonymous" flag
-            set_client_field(client_id, "wsm:wait-for-response", Value::Bool(false));
-            set_client_field(client_id, "anonymous", Value::Bool(true));
+            set_client_field(client_id, "unauthorized", Value::Bool(false));
+            set_client_field(client_id, "group", Value::String("anonymous".into()));
         }
         _ => {
             trigger_disconnect(client_id);
