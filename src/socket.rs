@@ -1,14 +1,14 @@
 // src/socket.rs
 
 use serde_json::Value;
-use crate::handler::trigger_disconnect;
+use crate::handler::{trigger_disconnect, notify_client_dropped};
 use crate::pool::{is_msg_id_available, get_msg_json, remove_msg_id};
 use crate::client::{is_client_valid, unregister_client};
 use crate::handshake::{get_client_handshake_status, handle_handshake_auth};
 use crate::process::process_response_from_client;
 
 // protocol message handler
-pub fn handle_wsm_message(json: Value, client_id: &str) {
+pub fn handle_wsm_response_message(json: Value, client_id: &str) {
     if !validate_client_response(&json, client_id) {
         return;
     }
@@ -25,6 +25,10 @@ pub fn handle_wsm_message(json: Value, client_id: &str) {
                     handle_handshake_auth(&json, client_id);
                 }
                 _ => {
+                    trigger_disconnect(client_id);
+                    unregister_client(client_id);
+                    remove_msg_id("server", client_id);
+                    notify_client_dropped(client_id);
                     // fallback safety
                     return;
                 }
@@ -51,6 +55,8 @@ fn check_from_field(json: &Value, client_id: &str) -> bool {
         _ => {
             trigger_disconnect(client_id);
             unregister_client(client_id);
+            remove_msg_id("server", client_id);
+            notify_client_dropped(client_id);
             false
         }
     }
@@ -66,6 +72,8 @@ fn check_msg_id(json: &Value, client_id: &str) -> bool {
         || {
             trigger_disconnect(client_id);
             unregister_client(client_id);
+            remove_msg_id("server", client_id);
+            notify_client_dropped(client_id);
             false
         }
 }
@@ -80,6 +88,8 @@ fn check_msg_id_exists(json: &Value, client_id: &str) -> bool {
     if is_msg_id_available(client_id, msg_id) {
         trigger_disconnect(client_id);
         unregister_client(client_id);
+        remove_msg_id("server", client_id);
+        notify_client_dropped(client_id);
         return false;
     }
 
@@ -88,6 +98,8 @@ fn check_msg_id_exists(json: &Value, client_id: &str) -> bool {
     if original.is_null() {
         trigger_disconnect(client_id);
         unregister_client(client_id);
+        remove_msg_id("server", client_id);
+        notify_client_dropped(client_id);
         return false;
     }
 
@@ -104,6 +116,8 @@ fn check_msg_id_exists(json: &Value, client_id: &str) -> bool {
         _ => {
             trigger_disconnect(client_id);
             unregister_client(client_id);
+            remove_msg_id("server", client_id);
+            notify_client_dropped(client_id);
             false
         }
     }
@@ -116,6 +130,8 @@ fn check_to_field(json: &Value, client_id: &str) -> bool {
         None => {
             trigger_disconnect(client_id);
             unregister_client(client_id);
+            remove_msg_id("server", client_id);
+            notify_client_dropped(client_id);
             return false;
         }
     };
@@ -128,14 +144,18 @@ fn check_to_field(json: &Value, client_id: &str) -> bool {
             } else {
                 trigger_disconnect(client_id);
                 unregister_client(client_id);
+                remove_msg_id("server", client_id);
                 remove_msg_id(client_id, msg_id);
+                notify_client_dropped(client_id);
                 false
             }
         }
         _ => {
             trigger_disconnect(client_id);
             unregister_client(client_id);
+            remove_msg_id("server", client_id);
             remove_msg_id(client_id, msg_id);
+            notify_client_dropped(client_id);
             false
         }
     }

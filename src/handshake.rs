@@ -1,7 +1,7 @@
 // src/handshake.rs
 
 use crate::client::get_client_field;
-use crate::handler::{trigger_disconnect, trigger_auth};
+use crate::handler::{trigger_disconnect, trigger_auth, notify_client_dropped};
 use serde_json::Value;
 use crate::client::unregister_client;
 use crate::pool::{delete_pool, remove_msg_id};
@@ -22,6 +22,8 @@ pub fn handle_handshake_auth(json: &Value, client_id: &str) {
         Some(Value::Object(map)) => map,
         _ => {
             trigger_disconnect(client_id);
+            remove_msg_id("server", client_id);
+            notify_client_dropped(client_id);
             return;
         }
     };
@@ -36,6 +38,8 @@ pub fn handle_handshake_auth(json: &Value, client_id: &str) {
             trigger_disconnect(client_id);
             unregister_client(client_id);
             delete_pool(client_id);
+            remove_msg_id("server", client_id);
+            notify_client_dropped(client_id);
             return;
         }
     }
@@ -47,6 +51,8 @@ pub fn handle_handshake_auth(json: &Value, client_id: &str) {
             trigger_disconnect(client_id);
             unregister_client(client_id);
             delete_pool(client_id);
+            remove_msg_id("server", client_id);
+            notify_client_dropped(client_id);
             return;
         }
     };
@@ -62,6 +68,8 @@ pub fn handle_handshake_auth(json: &Value, client_id: &str) {
                 trigger_disconnect(client_id);
                 unregister_client(client_id);
                 delete_pool(client_id);
+                remove_msg_id("server", client_id);
+                notify_client_dropped(client_id);
             }
         }
         Some("Anonymous") => {
@@ -73,6 +81,8 @@ pub fn handle_handshake_auth(json: &Value, client_id: &str) {
             trigger_disconnect(client_id);
             unregister_client(client_id);
             delete_pool(client_id);
+            remove_msg_id("server", client_id);
+            notify_client_dropped(client_id);
         }
     }
 }

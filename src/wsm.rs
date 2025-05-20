@@ -41,7 +41,6 @@ pub fn server_request_client(
     version: &str,
     endpoint: &str,
     params: Vec<&str>,
-    callback_key: &str,
 ) -> (Value, String) {
     assert!(is_client_valid(client_id), "Client not valid");
 
@@ -53,9 +52,6 @@ pub fn server_request_client(
 
     // store in pool
     set_msg_json(client_id, &msg_id, json_str);
-
-    // save callback_key to registry
-    CALLBACK_REGISTRY.lock().unwrap().insert(msg_id.clone(), callback_key.to_string());
 
     (json_str, msg_id)
 }

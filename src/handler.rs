@@ -62,3 +62,23 @@ pub fn trigger_response_callback(client_id: &str, msg_id: &str, success: bool, r
         handler(client_id, msg_id, success, result);
     }
 }
+
+type ClientDropHandler = Arc<dyn Fn(&str) + Send + Sync>;
+
+lazy_static! {
+    static ref CLIENT_DROP_HANDLER: Mutex<Option<ClientDropHandler>> = Mutex::new(None);
+}
+
+pub fn register_client_drop_handler<F>(f: F)
+where
+    F: Fn(&str) + Send + Sync + 'static,
+{
+    let mut handler = CLIENT_DROP_HANDLER.lock().unwrap();
+    *handler = Some(Arc::new(f));
+}
+
+pub fn notify_client_dropped(client_id: &str) {
+    if let Some(handler) = &*CLIENT_DROP_HANDLER.lock().unwrap() {
+        handler(client_id);
+    }
+}
