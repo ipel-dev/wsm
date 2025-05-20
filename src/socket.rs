@@ -2,8 +2,9 @@
 
 use serde_json::Value;
 use crate::handler::trigger_disconnect;
-use crate::pool::{is_msg_id_available, get_msg_json};
+use crate::pool::{is_msg_id_available, get_msg_json, remove_msg_id};
 use crate::client::{is_client_valid, unregister_client};
+use crate::handshake::{get_client_handshake_status, handle_handshake_auth};
 
 // protocol message handler
 pub fn handle_wsm_message(json: Value, client_id: &str) {
@@ -11,13 +12,22 @@ pub fn handle_wsm_message(json: Value, client_id: &str) {
         return;
     }
 
-    // only process messages sent to the server ("t": "s")
     match json.get("t").and_then(|v| v.as_str()) {
         Some("s") => {
-            // TODO: handle valid response to server
+            match get_client_handshake_status(client_id) {
+                "active" => {
+                    // TODO: handle response from already active client
+                }
+                "wait-for-response" => {
+                    handle_handshake_auth(&json, client_id);
+                }
+                _ => {
+                    // fallback safety
+                    return;
+                }
+            }
         }
         _ => {
-            // currently not processing client-to-client responses
             return;
         }
     }
@@ -98,6 +108,15 @@ fn check_msg_id_exists(json: &Value, client_id: &str) -> bool {
 
 // Check that "t" is either "s" or a valid client_id
 fn check_to_field(json: &Value, client_id: &str) -> bool {
+    let msg_id = match json.get("i").and_then(|v| v.as_str()) {
+        Some(id) => id,
+        None => {
+            trigger_disconnect(client_id);
+            unregister_client(client_id);
+            return false;
+        }
+    };
+
     match json.get("t").and_then(|v| v.as_str()) {
         Some("s") => true,
         Some(to) if to.len() == 5 && to.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit()) => {
@@ -106,12 +125,14 @@ fn check_to_field(json: &Value, client_id: &str) -> bool {
             } else {
                 trigger_disconnect(client_id);
                 unregister_client(client_id);
+                remove_msg_id(client_id, msg_id);
                 false
             }
         }
         _ => {
             trigger_disconnect(client_id);
             unregister_client(client_id);
+            remove_msg_id(client_id, msg_id);
             false
         }
     }

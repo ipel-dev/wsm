@@ -30,6 +30,6 @@ pub fn init_client_connection() -> (Value, String) {
     );
 
     set_msg_json(&client_id, &msg_id, msg_json.clone());
-    register_client(&client_id);
+    register_client(&client_id); // handshake status -> wait-for-response
     (msg_json, client_id)
 }
