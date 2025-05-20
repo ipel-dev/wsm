@@ -11,6 +11,7 @@ pub mod client;
 pub mod socket;
 pub mod server;
 pub mod handler;
+pub mod handshake;
 
 mod __init__;
 

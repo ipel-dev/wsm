@@ -11,7 +11,16 @@ pub fn handle_wsm_message(json: Value, client_id: &str) {
         return;
     }
 
-    // TODO: handle valid response
+    // only process messages sent to the server ("t": "s")
+    match json.get("t").and_then(|v| v.as_str()) {
+        Some("s") => {
+            // TODO: handle valid response to server
+        }
+        _ => {
+            // currently not processing client-to-client responses
+            return;
+        }
+    }
 }
 
 // Master validator: composed of individual checks
