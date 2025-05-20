@@ -10,6 +10,7 @@ pub mod pretty;
 pub mod client;
 pub mod socket;
 pub mod server;
+pub mod handler;
 
 mod __init__;
 
